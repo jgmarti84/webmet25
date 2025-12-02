@@ -113,4 +113,11 @@ MEDIA_ROOT = os.getenv('PRODUCTS_DIR', '/data/products')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS settings
-CORS_ALLOW_ALL_ORIGINS = DEBUG
+# In production, set CORS_ALLOWED_ORIGINS with specific origins
+if DEBUG:
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ]
+else:
+    CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if os.getenv('CORS_ALLOWED_ORIGINS') else []

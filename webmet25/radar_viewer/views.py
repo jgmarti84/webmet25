@@ -16,7 +16,7 @@ def index(request):
 
 def api_products(request):
     """API endpoint to get available radar products."""
-    products = RadarProduct.objects.all()[:50]
+    products = RadarProduct.objects.all().order_by('-valid_time')[:50]
     data = [
         {
             'id': p.id,
