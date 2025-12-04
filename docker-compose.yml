@@ -24,18 +24,22 @@ services:
       context: ./genpro25
       dockerfile: Dockerfile
     container_name: webmet25-genpro25
-    environment:
-      POSTGRES_HOST: db
-      POSTGRES_PORT: 5432
-      POSTGRES_DB: radardb
-      POSTGRES_USER: radar
-      POSTGRES_PASSWORD: radarpass
-      PRODUCTS_DIR: /data/products
     volumes:
-      - radar_products:/data/products
-    depends_on:
-      db:
-        condition: service_healthy
+      - ./product_output:/app/product_output
+    environment:
+      FTP_HOST: "200.16.116.24"
+      FTP_USER: "IMontamat"
+      FTP_PASS: "1m0nt"
+      ROOT_CACHE_PATH: "/app/cache"
+      ROOT_RADAR_FILES_PATH: "/app/data/radares"
+      ROOT_RADAR_PRODUCTS_PATH: "/app/product_output"
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+    working_dir: /app
+    command: ["bash", "-c", "mkdir -p /app/product_output && python main.py"]
+    # depends_on:
+    #   db:
+    #     condition: service_healthy
     restart: unless-stopped
 
   # Web visualization service
