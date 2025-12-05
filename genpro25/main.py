@@ -13,7 +13,7 @@ from logging.handlers import TimedRotatingFileHandler
 import os
 from pathlib import Path
 
-from radarlib import config
+import config
 from radarlib.daemons import DaemonManager, DaemonManagerConfig
 
 
@@ -37,9 +37,8 @@ def main():
     # handlers
     stream_handler = logging.StreamHandler()
     # ensure log directory exists before creating a FileHandler to avoid "No such file or directory"
-    log_dir = Path(config.ROOT_LOGS_PATH) / radar_name
+    log_dir = Path(config.ROOT_LOGS_PATH) / radar_name # type: ignore
     log_dir.mkdir(parents=True, exist_ok=True)
-    # file_handler = logging.FileHandler(str(log_dir / "genpro25.log"))
 
     # Rotate daily at midnight, keep 7 days of logs
     timed_handler = TimedRotatingFileHandler(
@@ -66,39 +65,33 @@ def main():
     logger.info("=" * 60)
 
     # Define volume types
-    volume_types = {
-        "0315": {
-            "01": ["DBZH", "DBZV", "ZDR", "RHOHV", "PHIDP", "KDP"],
-            "02": ["VRAD", "WRAD"],
-        },
-    }
+    volume_types = config.VOLUME_TYPES # type: ignore
 
-    
-    base_path = Path(os.path.join(config.ROOT_RADAR_FILES_PATH, radar_name))
+    base_path = Path(os.path.join(config.ROOT_RADAR_FILES_PATH, radar_name)) # type: ignore
 
     # Create manager configuration
     manager_config = DaemonManagerConfig(
         radar_name=radar_name,
         base_path=base_path,
-        ftp_host=config.FTP_HOST,
-        ftp_user=config.FTP_USER,
-        ftp_password=config.FTP_PASS,
+        ftp_host=config.FTP_HOST, # type: ignore
+        ftp_user=config.FTP_USER, # type: ignore
+        ftp_password=config.FTP_PASS, # type: ignore
         ftp_base_path="/L2",
         volume_types=volume_types,
         # start_date=datetime(2025, 11, 25, 10, 0, 0, tzinfo=timezone.utc),
-        download_poll_interval=60,
-        processing_poll_interval=30,
-        product_poll_interval=30,
-        enable_download_daemon=True,
-        enable_processing_daemon=True,
-        enable_product_daemon=True,
-        product_dir=Path(os.path.join(config.ROOT_RADAR_PRODUCTS_PATH, radar_name)),
+        download_poll_interval=config.DOWNLOAD_POLL_INTERVAL, # type: ignore
+        processing_poll_interval=config.PROCESSING_POLL_INTERVAL, # type: ignore
+        product_poll_interval=config.PRODUCT_POLL_INTERVAL, # type: ignore
+        enable_download_daemon=config.ENABLE_DOWNLOAD_DAEMON, # type: ignore
+        enable_processing_daemon=config.ENABLE_PROCESSING_DAEMON, # type: ignore
+        enable_product_daemon=config.ENABLE_PRODUCT_DAEMON, # type: ignore
+        product_dir=Path(os.path.join(config.ROOT_RADAR_PRODUCTS_PATH, radar_name)), # type: ignore
         product_type="image",
-        add_colmax=True,
-        enable_cleanup_daemon=True,
-        netcdf_retention_days=2 / 24,
-        bufr_retention_days=2 / 24,
-        cleanup_poll_interval=1800,
+        add_colmax=config.ADD_COLMAX, # type: ignore
+        enable_cleanup_daemon=config.ENABLE_CLEANUP_DAEMON, # type: ignore
+        netcdf_retention_days=config.NETCDF_RETENTION_DAYS, # type: ignore
+        bufr_retention_days=config.BUFR_RETENTION_DAYS, # type: ignore
+        cleanup_poll_interval=config.CLEANUP_POLL_INTERVAL, # type: ignore
     )
 
     # Create manager
