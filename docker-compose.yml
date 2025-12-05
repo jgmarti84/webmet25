@@ -19,20 +19,23 @@ services:
     restart: unless-stopped
 
   # Radar data processing service
-  genpro25:
+  genpro25-RMA3:
     build:
       context: ./genpro25
       dockerfile: Dockerfile
     container_name: webmet25-genpro25
     volumes:
       - ./product_output:/app/product_output
+      - ./logs:/app/logs
     environment:
+      RADAR_NAME: "RMA3"
       FTP_HOST: "200.16.116.24"
       FTP_USER: "IMontamat"
       FTP_PASS: "1m0nt"
       ROOT_CACHE_PATH: "/app/cache"
       ROOT_RADAR_FILES_PATH: "/app/data/radares"
       ROOT_RADAR_PRODUCTS_PATH: "/app/product_output"
+      ROOT_LOGS_PATH: "/app/logs"
       PYTHONDONTWRITEBYTECODE: "1"
       PYTHONUNBUFFERED: "1"
     working_dir: /app

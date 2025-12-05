@@ -9,6 +9,7 @@ This service handles:
 """
 import asyncio
 import logging
+from logging.handlers import TimedRotatingFileHandler
 import os
 from pathlib import Path
 
@@ -16,19 +17,52 @@ from radarlib import config
 from radarlib.daemons import DaemonManager, DaemonManagerConfig
 
 
-logger = logging.getLogger(__name__)
-
-
-# Setup logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-
-
 def main():
     """
     Main entry point for the Genpro25 radar data processing service.
     """
+    radar_name = os.getenv("RADAR_NAME", "RMA2")
+
+    ################################################################
+    # LOGGING SETUP
+    # Ensure every LogRecord has a 'radar' attribute so "%(radar)s" in the format won't KeyError
+    _old_factory = logging.getLogRecordFactory()
+    def _record_factory(*args, **kwargs):
+        record = _old_factory(*args, **kwargs)
+        record.radar = radar_name
+        return record
+    
+    logger = logging.getLogger(__name__)
+
+    # handlers
+    stream_handler = logging.StreamHandler()
+    # ensure log directory exists before creating a FileHandler to avoid "No such file or directory"
+    log_dir = Path(config.ROOT_LOGS_PATH) / radar_name
+    log_dir.mkdir(parents=True, exist_ok=True)
+    # file_handler = logging.FileHandler(str(log_dir / "genpro25.log"))
+
+    # Rotate daily at midnight, keep 7 days of logs
+    timed_handler = TimedRotatingFileHandler(
+        filename=str(log_dir / "genpro25.log"),
+        when='midnight',     # When to rotate
+        interval=1,          # Rotate every 1 unit (day in this case)
+        backupCount=7,       # Keep 7 backup files
+        encoding='utf-8',
+        utc=True             # Use local time (True for UTC)
+    )
+
+    logging.setLogRecordFactory(_record_factory)
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(radar)s|%(levelname)s] %(module)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        handlers=[stream_handler, timed_handler],
+    )
+    ################################################################
+
     logger.info("=" * 60)
-    logger.info("Basic Daemon Manager Example")
+    logger.info("Genpro25 Radar Data Processing Service Starting")
     logger.info("=" * 60)
 
     # Define volume types
@@ -39,7 +73,7 @@ def main():
         },
     }
 
-    radar_name = "RMA1"
+    
     base_path = Path(os.path.join(config.ROOT_RADAR_FILES_PATH, radar_name))
 
     # Create manager configuration
@@ -70,9 +104,9 @@ def main():
     # Create manager
     manager = DaemonManager(manager_config)
 
-    logger.info("\nStarting daemon manager...")
-    logger.info("  Both download and processing daemons will start")
-    logger.info("  Press Ctrl+C to stop all daemons\n")
+    logger.info("Starting daemon manager...")
+    logger.info("Both download and processing daemons will start")
+    logger.info("Press Ctrl+C to stop all daemons")
 
     try:
         asyncio.run(manager.start())
