@@ -9,7 +9,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('radar_viewer.urls')),
+    path('radar_api/', include('radar_api.urls')),
 ]
 
 # Serve media files in development
