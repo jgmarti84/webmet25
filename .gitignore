@@ -33,3 +33,9 @@ Thumbs.db
 
 # Data
 /data/
+
+# Node.js / Frontend
+node_modules/
+dist/
+.npm/
+*.tgz

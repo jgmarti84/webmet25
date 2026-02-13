@@ -5,6 +5,7 @@ import { SnackbarProvider } from "notistack";
 
 import "./index.css";
 import App from "./App.jsx";
+import RadarApp from "./RadarApp.jsx";
 import CacheStats from "./views/CacheStats.jsx";
 
 createRoot(document.getElementById("root")).render(
@@ -20,7 +21,8 @@ createRoot(document.getElementById("root")).render(
       <BrowserRouter>
         <Routes>
           <Route path="/cache" element={<CacheStats />} />
-          <Route path="*" element={<App />} />
+          <Route path="/old" element={<App />} />
+          <Route path="*" element={<RadarApp />} />
         </Routes>
       </BrowserRouter>
     </SnackbarProvider>
