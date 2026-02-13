@@ -133,7 +133,7 @@ export default function RadarApp() {
     };
     
     loadCogsAndColormap();
-  }, [selectedRadar, selectedProduct]);
+  }, [selectedRadar, selectedProduct, enqueueSnackbar]);
 
   // Animation control
   useEffect(() => {
