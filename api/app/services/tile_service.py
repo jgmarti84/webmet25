@@ -13,6 +13,7 @@ from rio_tiler.colormap import cmap as rio_cmap
 
 from ..config import settings
 from ..utils.colormaps import colormap_for_field, colormap_to_rio_tiler
+from ..utils.cog_validation import get_cog_validator
 
 logger = logging.getLogger(__name__)
 
@@ -238,6 +239,17 @@ class TileService:
         try:
             with Reader(str(full_path)) as src:
                 info = src.info()
+                
+                # Check if pre-colored and validate if needed
+                is_precolored = src.dataset.count >= 3
+                validation_result = None
+                
+                if is_precolored:
+                    validator = get_cog_validator()
+                    # Try to infer product key from file path or metadata
+                    # For now, we'll leave this for explicit API calls
+                    logger.debug(f"COG {file_path} appears to be pre-colored ({src.dataset.count} bands)")
+                
                 return {
                     "bounds": info.bounds,
                     "minzoom": info.minzoom,
@@ -245,6 +257,8 @@ class TileService:
                     "band_metadata": info.band_metadata,
                     "dtype": info.dtype,
                     "nodata": info.nodata_value,
+                    "is_precolored": is_precolored,
+                    "num_bands": src.dataset.count,
                 }
         except Exception as e:
             logger.error(f"Error getting COG info for {file_path}: {e}")

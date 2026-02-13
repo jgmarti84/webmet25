@@ -5,17 +5,23 @@ WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
+    git \
     libpq-dev \
     gcc \
+    g++ \
+    make \
     gdal-bin \
     libgdal-dev \
+    python3-gdal \
     && rm -rf /var/lib/apt/lists/*
 
 ENV CPLUS_INCLUDE_PATH=/usr/include/gdal
 ENV C_INCLUDE_PATH=/usr/include/gdal
+ENV GDAL_CONFIG=/usr/bin/gdal-config
 
 # Copy and install Python dependencies
 COPY api/requirements.txt .
+RUN pip install --no-cache-dir --only-binary :all: rasterio rio-tiler
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy shared package
@@ -23,6 +29,9 @@ COPY database/radar_db/ ./radar_db/
 
 # Copy API code
 COPY api/app/ ./app/
+
+# Copy scripts
+COPY api/scripts/ ./scripts/
 
 ENV PYTHONPATH=/app
 
