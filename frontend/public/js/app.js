@@ -53,6 +53,9 @@ const app = {
         state.ui = new UIControls();
         state.ui.setStatus('Initializing...', 'loading');
         
+        console.log('[App] Starting initialization...');
+        console.log('[App] API will be requested from:', window.location.origin);
+        
         try {
             // Wait for Leaflet to be loaded
             await this.waitForLeaflet();
@@ -81,10 +84,12 @@ const app = {
             state.ui.enableNavButtons(false);
             
             state.ui.setStatus('Ready', 'success');
+            console.log('[App] Initialization complete');
             
         } catch (error) {
-            console.error('Init error:', error);
-            state.ui.setStatus(`Error: ${error.message}`, 'error');
+            console.error('[App] Initialization error:', error);
+            const errorMsg = error.message || String(error);
+            state.ui.setStatus(`Error: ${errorMsg}`, 'error');
         }
     },
     
@@ -109,15 +114,28 @@ const app = {
      * Load radars and products from API
      */
     async loadInitialData() {
-        // Load radars
-        state.radars = await api.getRadars();
-        state.ui.populateRadarCheckboxes(state.radars);
-        
-        // Load products
-        state.products = await api.getProducts();
-        // Populate with filtered products by default
-        state.ui.populateProductSelect(state.products, state.showUnfilteredProducts);
-        state.ui.updateFilterButton(state.showUnfilteredProducts);
+        try {
+            // Load radars
+            state.radars = await api.getRadars();
+            state.ui.populateRadarCheckboxes(state.radars);
+            
+            // Load products
+            state.products = await api.getProducts();
+            // Populate with filtered products by default
+            state.ui.populateProductSelect(state.products, state.showUnfilteredProducts);
+            state.ui.updateFilterButton(state.showUnfilteredProducts);
+        } catch (error) {
+            console.error('Failed to load initial data:', error);
+            
+            // Provide helpful error message
+            let errorMsg = error.message;
+            if (error.message.includes('Network error')) {
+                errorMsg += '\n\n💡 Make sure:\n1. Backend API is running (check http://localhost:8000/api/v1/radars)\n2. If testing with Docker, access via http://localhost (port 80)\n3. If testing frontend locally, use `python -m http.server` to serve files';
+            }
+            
+            state.ui.setStatus(`Failed to load data: ${errorMsg}`, 'error');
+            throw error;
+        }
     },
     
     /**

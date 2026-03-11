@@ -2,20 +2,57 @@
  * API Module - Handles all backend communication
  */
 
-const API_BASE = window.location.hostname === 'localhost' 
-    ? 'http://localhost:8000/api/v1'
-    : '/api/v1';
+// Determine API base URL
+// Use relative path when possible (works with Docker, proxies, etc)
+// Only use absolute URL if we're on a different port/interface in development
+const API_BASE = (() => {
+    // If running on localhost in development, try to connect to API on port 8000
+    // Otherwise, assume the frontend and API are served from the same origin
+    if (window.location.hostname === 'localhost' && window.location.port !== '8000') {
+        return 'http://localhost:8000/api/v1';
+    }
+    // Use relative path for deployed or Docker setups
+    return '/api/v1';
+})();
+
+console.log('[API] Using API base URL:', API_BASE);
 
 export const api = {
     /**
-     * Generic GET request
+     * Generic GET request with proper error handling
      */
     async get(endpoint) {
-        const response = await fetch(`${API_BASE}${endpoint}`);
-        if (!response.ok) {
-            throw new Error(`API error: ${response.status}`);
+        const url = `${API_BASE}${endpoint}`;
+        console.log(`[API] GET ${url}`);
+        
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                },
+                mode: 'cors',
+                credentials: 'omit'
+            });
+            
+            if (!response.ok) {
+                console.error(`[API] Error: ${response.status} ${response.statusText}`);
+                const errorText = await response.text();
+                console.error(`[API] Response: ${errorText}`);
+                throw new Error(`API error: ${response.status} ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            console.log(`[API] Success: ${endpoint}`, data);
+            return data;
+        } catch (error) {
+            if (error instanceof TypeError) {
+                console.error(`[API] Network error (possible CORS issue):`, error.message);
+                console.error(`[API] Tried URL: ${url}`);
+                throw new Error(`Network error: ${error.message}. Check browser console for details.`);
+            }
+            throw error;
         }
-        return response.json();
     },
     
     /**
